@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from transformers import AutoTokenizer
 import onnxruntime as ort
 import numpy as np
+from fastapi.responses import JSONResponse
 
 app = FastAPI()
 
@@ -30,3 +31,21 @@ def embed_text(data: TextInput):
     return {
         "embedding": embedding.tolist()
     }
+
+@app.get("/status")
+def healthcheck():
+    try:
+        # Example of checking ONNX session or load tokenizer
+        if session is None:
+            raise ValueError("ONNX session not ready")
+
+        return {"status": "ok", "message": "ONNX model and tokenizer are ready"}
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
+
+
+@app.get("/health-check")
+def healthcheck():
+    return JSONResponse(content={"status": "ok"})
+
+
