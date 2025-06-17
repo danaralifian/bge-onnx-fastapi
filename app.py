@@ -1,9 +1,16 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException
 from pydantic import BaseModel
 from transformers import AutoTokenizer
 import onnxruntime as ort
 import numpy as np
 from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
+from exceptions.handlers import (
+    http_exception_handler,
+    global_exception_handler,
+    validation_exception_handler
+)
+from pydantic import BaseModel
 
 app = FastAPI()
 
@@ -13,6 +20,11 @@ session = ort.InferenceSession("onnx-model/model.onnx")
 
 class TextInput(BaseModel):
     text: str
+
+# Register global exception handlers
+app.add_exception_handler(HTTPException, http_exception_handler)
+app.add_exception_handler(Exception, global_exception_handler)
+app.add_exception_handler(RequestValidationError, validation_exception_handler)
 
 @app.post("/embed")
 def embed_text(data: TextInput):
@@ -29,7 +41,9 @@ def embed_text(data: TextInput):
     embedding = outputs[0].mean(axis=1)[0]  # Average pooling
 
     return {
-        "embedding": embedding.tolist()
+        "data":  {
+            "text": embedding.tolist()
+        }
     }
 
 @app.get("/status")
