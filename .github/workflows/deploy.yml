@@ -1,0 +1,46 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Build Docker image
+        run: |
+          docker build -t bge-onnx .
+
+      - name: Save image to tar
+        run: |
+          docker save bge-onnx | gzip > bge-onnx.tar.gz
+
+      - name: Copy image to VPS via scp
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: 22
+          source: "bge-onnx.tar.gz"
+          target: "~/"
+
+      - name: Deploy on VPS via ssh
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: 22
+          script: |
+            docker load < bge-onnx.tar.gz
+            docker stop bge-onnx || true
+            docker rm bge-onnx || true
+            docker run -d --name bge-onnx -p 8000:8000 bge-onnx
