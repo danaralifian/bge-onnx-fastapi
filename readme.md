@@ -35,7 +35,7 @@ pip install -r requirements.txt
 3. 📦 Download and Convert Model to ONNX
 
 ```bash
-python convert-to-onnx.py
+python convert_to_onnx.py
 ```
 
 This will:
