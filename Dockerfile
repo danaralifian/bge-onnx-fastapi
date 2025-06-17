@@ -17,6 +17,8 @@ COPY --from=builder /build/onnx-model /app/onnx-model
 
 # Copy inference app and runtime dependencies
 COPY app.py .
+COPY exceptions/ exceptions/
+COPY middlewares/ middlewares/
 COPY requirements-runtime.txt .
 
 # Install only lightweight runtime dependencies
