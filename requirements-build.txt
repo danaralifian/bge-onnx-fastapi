@@ -1,7 +1,3 @@
-fastapi
-uvicorn
-onnxruntime
-transformers
 torch
 torchvision
 transformers
